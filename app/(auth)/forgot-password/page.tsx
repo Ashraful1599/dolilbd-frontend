@@ -13,8 +13,8 @@ export default function ForgotPasswordPage() {
 
   const [step, setStep]             = useState<Step>('lookup');
   const [identifier, setIdentifier] = useState('');
-  const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
-  const [maskedPhone, setMaskedPhone] = useState<string | null>(null);
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
+  const [accountPhone, setAccountPhone] = useState<string | null>(null);
   const [method, setMethod]         = useState<'email' | 'phone'>('email');
   const [otp, setOtp]               = useState('');
   const [resetToken, setResetToken] = useState('');
@@ -22,25 +22,35 @@ export default function ForgotPasswordPage() {
   const [confirm, setConfirm]       = useState('');
   const [loading, setLoading]       = useState(false);
 
+  // Auto-prepend +88 for phone numbers
+  function normalizeIdentifier(value: string): string {
+    const trimmed = value.trim();
+    if (!trimmed.includes('@') && !trimmed.startsWith('+')) {
+      return '+88' + trimmed;
+    }
+    return trimmed;
+  }
+
   // Step 1 — look up account by email or phone
   async function handleLookup(e: React.FormEvent) {
     e.preventDefault();
+    const normalized = normalizeIdentifier(identifier);
+    setIdentifier(normalized);
     setLoading(true);
     try {
       const res  = await fetch(`${API}/lookup-account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ identifier }),
+        body: JSON.stringify({ identifier: normalized }),
       });
       const data = await res.json();
       if (!res.ok) {
         toast.error(data.message || 'Account not found.');
         return;
       }
-      setMaskedEmail(data.masked_email);
-      setMaskedPhone(data.masked_phone);
-      // Pre-select whichever is available
-      setMethod(data.masked_email ? 'email' : 'phone');
+      setAccountEmail(data.email);
+      setAccountPhone(data.phone);
+      setMethod(data.email ? 'email' : 'phone');
       setStep('choose');
     } catch {
       toast.error('Something went wrong. Please try again.');
@@ -177,7 +187,7 @@ export default function ForgotPasswordPage() {
                 <p className="text-sm text-gray-500 mt-1">We'll send a 4-digit code to verify it's you.</p>
               </div>
               <div className="space-y-3 mb-6">
-                {maskedEmail && (
+                {accountEmail && (
                   <button
                     type="button"
                     onClick={() => setMethod('email')}
@@ -192,7 +202,7 @@ export default function ForgotPasswordPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">Send to Email</p>
-                      <p className="text-sm text-gray-500 font-mono">{maskedEmail}</p>
+                      <p className="text-sm text-gray-500">{accountEmail}</p>
                     </div>
                     {method === 'email' && (
                       <div className="ml-auto w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
@@ -203,7 +213,7 @@ export default function ForgotPasswordPage() {
                     )}
                   </button>
                 )}
-                {maskedPhone && (
+                {accountPhone && (
                   <button
                     type="button"
                     onClick={() => setMethod('phone')}
@@ -218,7 +228,7 @@ export default function ForgotPasswordPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">Send to Phone (SMS)</p>
-                      <p className="text-sm text-gray-500 font-mono">{maskedPhone}</p>
+                      <p className="text-sm text-gray-500">{accountPhone}</p>
                     </div>
                     {method === 'phone' && (
                       <div className="ml-auto w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
@@ -261,8 +271,8 @@ export default function ForgotPasswordPage() {
                 <p className="text-sm text-gray-500">
                   We sent a 4-digit code to your {method === 'phone' ? 'phone' : 'email'}
                 </p>
-                <p className="text-sm font-mono font-semibold text-gray-700 mt-1">
-                  {method === 'email' ? maskedEmail : maskedPhone}
+                <p className="text-sm font-semibold text-gray-700 mt-1">
+                  {method === 'email' ? accountEmail : accountPhone}
                 </p>
               </div>
               <form onSubmit={handleVerifyOtp} className="space-y-4">
