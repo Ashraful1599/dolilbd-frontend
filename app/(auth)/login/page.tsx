@@ -34,9 +34,14 @@ function LoginInner() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Auto-prepend +88 for phone numbers
+    const normalized = !loginField.includes('@') && !loginField.startsWith('+')
+      ? '+88' + loginField
+      : loginField;
+    setLoginField(normalized);
     setLoading(true);
     try {
-      const { user } = await login(loginField, password);
+      const { user } = await login(normalized, password);
       dispatch(setUser(user));
       router.push(user.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err: unknown) {
