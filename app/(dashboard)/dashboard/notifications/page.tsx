@@ -8,7 +8,7 @@ import Link from 'next/link';
 interface Notification {
   id: number;
   type: string;
-  data: { message?: string; dolil_id?: number; deed_title?: string; actor_name?: string };
+  data: { message?: string; dolil_id?: number; dolil_title?: string; actor_name?: string };
   read: boolean;
   read_at: string | null;
   created_at: string;
@@ -93,7 +93,7 @@ export default function NotificationsPage() {
                 <p className="text-sm text-gray-900">{n.data.message}</p>
                 {n.data.dolil_id && (
                   <Link href={`/dashboard/dolils/${n.data.dolil_id}`} className="text-xs text-blue-600 hover:underline mt-0.5 block">
-                    View dolil: {n.data.deed_title}
+                    View dolil: {n.data.dolil_title}
                   </Link>
                 )}
                 <p className="text-xs text-gray-400 mt-1">{fmtDateTime(n.created_at)}</p>

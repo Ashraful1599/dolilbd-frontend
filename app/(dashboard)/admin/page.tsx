@@ -30,12 +30,12 @@ interface AdminStats {
   users_by_status: Record<string, number>;
   users_new_today: number;
   users_new_this_week: number;
-  deeds_total: number;
-  deeds_by_status: Record<string, number>;
-  deeds_new_today: number;
-  deeds_new_this_week: number;
+  dolils_total: number;
+  dolils_by_status: Record<string, number>;
+  dolils_new_today: number;
+  dolils_new_this_week: number;
   recent_users: RecentUser[];
-  recent_deeds: RecentDolil[];
+  recent_dolils: RecentDolil[];
 }
 
 const roleColors: Record<string, string> = {
@@ -109,9 +109,9 @@ export default function AdminPage() {
       {/* Top stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total Users"  value={stats.users_total} icon={<IconUsers />}    color="blue" />
-        <StatCard title="Total Dolils"  value={stats.deeds_total} icon={<IconDocument />} color="purple" />
+        <StatCard title="Total Dolils"  value={stats.dolils_total} icon={<IconDocument />} color="purple" />
         <StatCard title="New Users This Week"  value={stats.users_new_this_week} icon={<IconUsers />}    color="green" />
-        <StatCard title="New Dolils This Week"  value={stats.deeds_new_this_week} icon={<IconDocument />} color="yellow" />
+        <StatCard title="New Dolils This Week"  value={stats.dolils_new_this_week} icon={<IconDocument />} color="yellow" />
       </div>
 
       {/* Users + Dolils breakdown */}
@@ -158,24 +158,24 @@ export default function AdminPage() {
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-3 text-center">
               <div className="bg-gray-50 rounded-lg py-3">
-                <p className="text-xl font-bold text-gray-700">{stats.deeds_by_status?.draft ?? 0}</p>
+                <p className="text-xl font-bold text-gray-700">{stats.dolils_by_status?.draft ?? 0}</p>
                 <p className="text-xs text-gray-500 mt-0.5">Draft</p>
               </div>
               <div className="bg-yellow-50 rounded-lg py-3">
-                <p className="text-xl font-bold text-yellow-700">{stats.deeds_by_status?.under_review ?? 0}</p>
+                <p className="text-xl font-bold text-yellow-700">{stats.dolils_by_status?.under_review ?? 0}</p>
                 <p className="text-xs text-yellow-500 mt-0.5">Under Review</p>
               </div>
               <div className="bg-blue-50 rounded-lg py-3">
-                <p className="text-xl font-bold text-blue-700">{stats.deeds_by_status?.completed ?? 0}</p>
+                <p className="text-xl font-bold text-blue-700">{stats.dolils_by_status?.completed ?? 0}</p>
                 <p className="text-xs text-blue-500 mt-0.5">Completed</p>
               </div>
               <div className="bg-green-50 rounded-lg py-3">
-                <p className="text-xl font-bold text-green-700">{stats.deeds_by_status?.archived ?? 0}</p>
+                <p className="text-xl font-bold text-green-700">{stats.dolils_by_status?.archived ?? 0}</p>
                 <p className="text-xs text-green-500 mt-0.5">Archived</p>
               </div>
             </div>
             <div className="flex items-center justify-end text-xs text-gray-400 pt-2 border-t border-gray-100">
-              +{stats.deeds_new_today} today
+              +{stats.dolils_new_today} today
             </div>
           </div>
         </div>
@@ -217,10 +217,10 @@ export default function AdminPage() {
             <Link href="/admin/dolils" className="text-xs text-blue-600 hover:underline">View all →</Link>
           </div>
           <div className="divide-y divide-gray-100">
-            {stats.recent_deeds.length === 0 && (
+            {stats.recent_dolils.length === 0 && (
               <p className="px-6 py-6 text-sm text-gray-400 text-center">No dolils yet</p>
             )}
-            {stats.recent_deeds.map((d) => (
+            {stats.recent_dolils.map((d) => (
               <div key={d.id} className="px-6 py-3 flex items-center justify-between">
                 <div>
                   <Link href={`/dashboard/dolils/${d.id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600">

@@ -14,7 +14,7 @@ interface NavItem { href: string; label: string; icon: ReactNode; }
 interface Notification {
   id: number;
   type: string;
-  data: { message?: string; dolil_id?: number; deed_title?: string };
+  data: { message?: string; dolil_id?: number; dolil_title?: string };
   read: boolean;
   created_at: string;
 }
@@ -286,7 +286,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                               onClick={() => { markRead(n.id); setNotifOpen(false); }}
                               className="text-xs text-blue-600 hover:underline mt-0.5 inline-block cursor-pointer"
                             >
-                              {n.data.deed_title ?? `Dolil #${n.data.dolil_id}`} →
+                              {n.data.dolil_title ?? `Dolil #${n.data.dolil_id}`} →
                             </Link>
                           )}
                           <p className="text-[11px] text-gray-400 mt-1">{timeAgo(n.created_at)}</p>

@@ -7,11 +7,11 @@ import { StatCard } from '@/components/ui/StatCard';
 import { IconDocument } from '@/components/ui/Icons';
 
 interface Stats {
-  deeds_total?: number;
-  deeds_created?: number;
-  deeds_assigned?: number;
-  deeds_by_status: Record<string, number>;
-  recent_deeds: {
+  dolils_total?: number;
+  dolils_created?: number;
+  dolils_assigned?: number;
+  dolils_by_status: Record<string, number>;
+  recent_dolils: {
     id: number;
     title: string;
     status: string;
@@ -54,8 +54,8 @@ export default function DashboardPage() {
 
   if (!stats) return <div className="text-gray-500">Loading...</div>;
 
-  const isAdmin = stats.deeds_total !== undefined;
-  const totalDolils = isAdmin ? stats.deeds_total! : (stats.deeds_created! + stats.deeds_assigned!);
+  const isAdmin = stats.dolils_total !== undefined;
+  const totalDolils = isAdmin ? stats.dolils_total! : (stats.dolils_created! + stats.dolils_assigned!);
 
   return (
     <div className="space-y-8">
@@ -97,15 +97,15 @@ export default function DashboardPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total Dolils" value={totalDolils ?? 0} icon={<IconDocument />} color="blue" />
-        <StatCard title="Draft" value={stats.deeds_by_status?.draft ?? 0} icon={<IconDocument />} color="gray" />
-        <StatCard title="Under Review" value={stats.deeds_by_status?.under_review ?? 0} icon={<IconDocument />} color="yellow" />
-        <StatCard title="Archived" value={stats.deeds_by_status?.archived ?? 0} icon={<IconDocument />} color="green" />
+        <StatCard title="Draft" value={stats.dolils_by_status?.draft ?? 0} icon={<IconDocument />} color="gray" />
+        <StatCard title="Under Review" value={stats.dolils_by_status?.under_review ?? 0} icon={<IconDocument />} color="yellow" />
+        <StatCard title="Archived" value={stats.dolils_by_status?.archived ?? 0} icon={<IconDocument />} color="green" />
       </div>
 
       {!isAdmin && (
         <div className="grid grid-cols-2 gap-4">
-          <StatCard title="Created by Me" value={stats.deeds_created ?? 0} icon={<IconDocument />} color="blue" />
-          <StatCard title="Assigned to Me" value={stats.deeds_assigned ?? 0} icon={<IconDocument />} color="purple" />
+          <StatCard title="Created by Me" value={stats.dolils_created ?? 0} icon={<IconDocument />} color="blue" />
+          <StatCard title="Assigned to Me" value={stats.dolils_assigned ?? 0} icon={<IconDocument />} color="purple" />
         </div>
       )}
 
@@ -116,10 +116,10 @@ export default function DashboardPage() {
           <Link href="/dashboard/dolils" className="text-sm text-blue-600 hover:underline">View all</Link>
         </div>
         <div className="divide-y divide-gray-100">
-          {stats.recent_deeds.length === 0 && (
+          {stats.recent_dolils.length === 0 && (
             <p className="px-6 py-8 text-center text-gray-400 text-sm">No dolils yet</p>
           )}
-          {stats.recent_deeds.map((dolil) => (
+          {stats.recent_dolils.map((dolil) => (
             <div key={dolil.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
               <div>
                 <Link href={`/dashboard/dolils/${dolil.id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600">
