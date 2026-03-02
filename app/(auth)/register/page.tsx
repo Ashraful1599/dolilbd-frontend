@@ -247,7 +247,7 @@ function RegisterForm() {
             </svg>
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Verify your phone</h2>
-          <p className="text-sm text-gray-500 mb-1">We sent a 6-digit OTP to</p>
+          <p className="text-sm text-gray-500 mb-1">We sent a 4-digit OTP to</p>
           <p className="text-sm font-semibold text-gray-800 mb-6">{registeredPhone}</p>
 
           {otpSending ? (
@@ -263,7 +263,7 @@ function RegisterForm() {
                 maxLength={4}
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="000000"
+                placeholder="0000"
                 className="w-40 mx-auto block border border-gray-300 rounded-lg px-3 py-2.5 text-center text-xl tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               />
