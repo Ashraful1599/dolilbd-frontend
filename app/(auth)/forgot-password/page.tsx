@@ -6,30 +6,64 @@ import { toast } from 'react-toastify';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
-type Step = 'identifier' | 'otp' | 'password';
+type Step = 'lookup' | 'choose' | 'otp' | 'password';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const [step, setStep]             = useState<Step>('identifier');
+
+  const [step, setStep]             = useState<Step>('lookup');
   const [identifier, setIdentifier] = useState('');
-  const [method, setMethod]         = useState<'email' | 'sms'>('email');
+  const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
+  const [maskedPhone, setMaskedPhone] = useState<string | null>(null);
+  const [method, setMethod]         = useState<'email' | 'phone'>('email');
   const [otp, setOtp]               = useState('');
   const [resetToken, setResetToken] = useState('');
   const [password, setPassword]     = useState('');
   const [confirm, setConfirm]       = useState('');
   const [loading, setLoading]       = useState(false);
 
-  async function handleSendOtp(e: React.FormEvent) {
+  // Step 1 — look up account by email or phone
+  async function handleLookup(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res  = await fetch(`${API}/forgot-password`, {
+      const res  = await fetch(`${API}/lookup-account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ identifier }),
       });
       const data = await res.json();
-      setMethod(data.method ?? 'email');
+      if (!res.ok) {
+        toast.error(data.message || 'Account not found.');
+        return;
+      }
+      setMaskedEmail(data.masked_email);
+      setMaskedPhone(data.masked_phone);
+      // Pre-select whichever is available
+      setMethod(data.masked_email ? 'email' : 'phone');
+      setStep('choose');
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Step 2 — send OTP to chosen method
+  async function handleSendOtp() {
+    setLoading(true);
+    try {
+      const res  = await fetch(`${API}/send-reset-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ identifier, method }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message || 'Failed to send OTP.');
+        return;
+      }
+      setOtp('');
       setStep('otp');
     } catch {
       toast.error('Something went wrong. Please try again.');
@@ -38,6 +72,7 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  // Step 3 — verify OTP
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -45,7 +80,7 @@ export default function ForgotPasswordPage() {
       const res  = await fetch(`${API}/verify-reset-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ identifier, otp }),
+        body: JSON.stringify({ identifier, method, otp }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -61,6 +96,7 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  // Step 4 — reset password
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirm) {
@@ -102,14 +138,14 @@ export default function ForgotPasswordPage() {
 
         <div className="bg-white rounded-lg shadow p-8 w-full">
 
-          {/* Step 1 — Enter email or phone */}
-          {step === 'identifier' && (
+          {/* Step 1 — Enter email or phone to find account */}
+          {step === 'lookup' && (
             <>
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Forgot password?</h2>
-                <p className="text-sm text-gray-500 mt-1">Enter your email or phone and we'll send a 4-digit OTP.</p>
+                <p className="text-sm text-gray-500 mt-1">Enter your registered email or phone number.</p>
               </div>
-              <form onSubmit={handleSendOtp} className="space-y-4">
+              <form onSubmit={handleLookup} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email or Phone</label>
                   <input
@@ -119,10 +155,11 @@ export default function ForgotPasswordPage() {
                     required
                     placeholder="email@example.com or +8801XXXXXXXXX"
                     className={inputCls}
+                    autoFocus
                   />
                 </div>
                 <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 cursor-pointer">
-                  {loading ? 'Sending OTP...' : 'Send OTP'}
+                  {loading ? 'Looking up...' : 'Continue'}
                 </button>
               </form>
               <p className="mt-4 text-center text-sm text-gray-600">
@@ -132,7 +169,86 @@ export default function ForgotPasswordPage() {
             </>
           )}
 
-          {/* Step 2 — Enter OTP */}
+          {/* Step 2 — Choose OTP method */}
+          {step === 'choose' && (
+            <>
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900">How would you like to receive your OTP?</h2>
+                <p className="text-sm text-gray-500 mt-1">We'll send a 4-digit code to verify it's you.</p>
+              </div>
+              <div className="space-y-3 mb-6">
+                {maskedEmail && (
+                  <button
+                    type="button"
+                    onClick={() => setMethod('email')}
+                    className={`w-full flex items-center gap-3 border-2 rounded-lg p-4 text-left transition-colors cursor-pointer ${
+                      method === 'email' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${method === 'email' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 ${method === 'email' ? 'text-blue-600' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Send to Email</p>
+                      <p className="text-sm text-gray-500 font-mono">{maskedEmail}</p>
+                    </div>
+                    {method === 'email' && (
+                      <div className="ml-auto w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                )}
+                {maskedPhone && (
+                  <button
+                    type="button"
+                    onClick={() => setMethod('phone')}
+                    className={`w-full flex items-center gap-3 border-2 rounded-lg p-4 text-left transition-colors cursor-pointer ${
+                      method === 'phone' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${method === 'phone' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 ${method === 'phone' ? 'text-blue-600' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Send to Phone (SMS)</p>
+                      <p className="text-sm text-gray-500 font-mono">{maskedPhone}</p>
+                    </div>
+                    {method === 'phone' && (
+                      <div className="ml-auto w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? 'Sending OTP...' : 'Send OTP'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep('lookup')}
+                className="w-full mt-2 border border-gray-300 text-gray-700 py-2 rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer"
+              >
+                Back
+              </button>
+            </>
+          )}
+
+          {/* Step 3 — Enter OTP */}
           {step === 'otp' && (
             <>
               <div className="mb-6 text-center">
@@ -143,9 +259,11 @@ export default function ForgotPasswordPage() {
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 mb-1">Enter OTP</h2>
                 <p className="text-sm text-gray-500">
-                  We sent a 4-digit OTP to your {method === 'sms' ? 'phone' : 'email'}
+                  We sent a 4-digit code to your {method === 'phone' ? 'phone' : 'email'}
                 </p>
-                <p className="text-sm font-semibold text-gray-800 mt-1">{identifier}</p>
+                <p className="text-sm font-mono font-semibold text-gray-700 mt-1">
+                  {method === 'email' ? maskedEmail : maskedPhone}
+                </p>
               </div>
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <input
@@ -167,8 +285,9 @@ export default function ForgotPasswordPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setOtp(''); setStep('identifier'); }}
-                  className="w-full border border-gray-300 text-gray-700 py-2 rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer"
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                  className="w-full border border-gray-300 text-gray-700 py-2 rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer disabled:opacity-50"
                 >
                   Resend OTP
                 </button>
@@ -176,7 +295,7 @@ export default function ForgotPasswordPage() {
             </>
           )}
 
-          {/* Step 3 — New password */}
+          {/* Step 4 — New password */}
           {step === 'password' && (
             <>
               <div className="mb-6">
@@ -194,6 +313,7 @@ export default function ForgotPasswordPage() {
                     minLength={8}
                     placeholder="Minimum 8 characters"
                     className={inputCls}
+                    autoFocus
                   />
                 </div>
                 <div>
