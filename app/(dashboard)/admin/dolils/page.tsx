@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import { showConfirm } from '@/lib/confirm';
 
 interface User { id: number; name: string; email: string; }
-interface Deed {
+interface Dolil {
   id: number;
   deed_number: string | null;
   title: string;
@@ -35,8 +35,8 @@ const statusLabels: Record<string, string> = {
 
 const STATUSES = ['', 'draft', 'under_review', 'completed', 'archived'];
 
-export default function AdminDeedsPage() {
-  const [deeds, setDeeds]     = useState<Deed[]>([]);
+export default function AdminDolilsPage() {
+  const [dolils, setDolils]     = useState<Dolil[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [status, setStatus]   = useState('');
@@ -53,22 +53,22 @@ export default function AdminDeedsPage() {
     if (st) params.status    = st;
     if (df) params.date_from = df;
     if (dt) params.date_to   = dt;
-    api.get('/admin/deeds', { params })
+    api.get('/admin/dolils', { params })
       .then((r) => {
-        setDeeds(r.data.data);
+        setDolils(r.data.data);
         setLastPage(r.data.meta?.last_page ?? r.data.last_page ?? 1);
         setTotal(r.data.meta?.total ?? r.data.total ?? 0);
       })
-      .catch(() => toast.error('Failed to load deeds'))
+      .catch(() => toast.error('Failed to load dolils'))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { load('', '', '', '', 1); }, []);
 
   async function handleDelete(id: number) {
-    if (!await showConfirm('This deed and all its data will be permanently deleted.', { title: 'Delete deed?' })) return;
-    api.delete(`/deeds/${id}`)
-      .then(() => { toast.success('Deed deleted'); load(search, status, dateFrom, dateTo, page); })
+    if (!await showConfirm('This dolil and all its data will be permanently deleted.', { title: 'Delete dolil?' })) return;
+    api.delete(`/dolils/${id}`)
+      .then(() => { toast.success('Dolil deleted'); load(search, status, dateFrom, dateTo, page); })
       .catch(() => toast.error('Delete failed'));
   }
 
@@ -82,7 +82,7 @@ export default function AdminDeedsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/admin" className="text-gray-500 hover:text-gray-700 text-sm">← Admin</Link>
-          <h2 className="text-2xl font-bold text-gray-900">All Deeds</h2>
+          <h2 className="text-2xl font-bold text-gray-900">All Dolils</h2>
         </div>
       </div>
 
@@ -90,7 +90,7 @@ export default function AdminDeedsPage() {
       <div className="bg-white rounded-lg shadow p-4 flex flex-wrap gap-3 items-center">
         <input
           type="text"
-          placeholder="Search by title, deed #, user..."
+          placeholder="Search by title, dolil #, user..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); load(search, status, dateFrom, dateTo, 1); } }}
@@ -146,7 +146,7 @@ export default function AdminDeedsPage() {
             <thead className="bg-gray-50 text-gray-600 text-left border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 font-medium w-12">#</th>
-                <th className="px-4 py-3 font-medium w-32">Deed No.</th>
+                <th className="px-4 py-3 font-medium w-32">Dolil No.</th>
                 <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Created By</th>
@@ -158,14 +158,14 @@ export default function AdminDeedsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {deeds.map((d) => (
+              {dolils.map((d) => (
                 <tr key={d.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-400 text-xs font-mono">{d.id}</td>
                   <td className="px-4 py-3 text-xs font-mono text-gray-700">
                     {d.deed_number ?? <span className="text-gray-300">—</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/dashboard/deeds/${d.id}`} className="font-medium text-gray-900 hover:text-blue-600">
+                    <Link href={`/dashboard/dolils/${d.id}`} className="font-medium text-gray-900 hover:text-blue-600">
                       {d.title}
                     </Link>
                   </td>
@@ -183,15 +183,15 @@ export default function AdminDeedsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2 text-xs">
-                      <Link href={`/dashboard/deeds/${d.id}`} className="text-blue-600 hover:underline">View</Link>
-                      <Link href={`/dashboard/deeds/${d.id}/edit`} className="text-gray-600 hover:underline">Edit</Link>
+                      <Link href={`/dashboard/dolils/${d.id}`} className="text-blue-600 hover:underline">View</Link>
+                      <Link href={`/dashboard/dolils/${d.id}/edit`} className="text-gray-600 hover:underline">Edit</Link>
                       <button onClick={() => handleDelete(d.id)} className="text-red-600 hover:underline">Delete</button>
                     </div>
                   </td>
                 </tr>
               ))}
-              {deeds.length === 0 && (
-                <tr><td colSpan={10} className="px-4 py-10 text-center text-gray-400">No deeds found</td></tr>
+              {dolils.length === 0 && (
+                <tr><td colSpan={10} className="px-4 py-10 text-center text-gray-400">No dolils found</td></tr>
               )}
             </tbody>
           </table>

@@ -231,7 +231,7 @@ function LoginInner() {
             {[
               { role: 'Admin', email: 'admin@deed.com' },
               { role: 'User', email: 'user@deed.com' },
-              { role: 'Deed Writer', email: 'writer@deed.com' },
+              { role: 'Dolil Writer', email: 'writer@deed.com' },
             ].map(({ role, email }) => (
               <button
                 key={email}

@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import { showConfirm } from '@/lib/confirm';
 
 interface User { id: number; name: string; email: string; }
-interface Deed {
+interface Dolil {
   id: number;
   deed_number: string | null;
   title: string;
@@ -54,8 +54,8 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
   );
 }
 
-export default function DeedsPage() {
-  const [deeds, setDeeds] = useState<Deed[]>([]);
+export default function DolilsPage() {
+  const [dolils, setDolils] = useState<Dolil[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -74,13 +74,13 @@ export default function DeedsPage() {
     if (st) params.status = st;
     if (df) params.date_from = df;
     if (dt) params.date_to = dt;
-    api.get('/deeds', { params })
+    api.get('/dolils', { params })
       .then((r) => {
-        setDeeds(r.data.data);
+        setDolils(r.data.data);
         setLastPage(r.data.meta?.last_page ?? r.data.last_page ?? 1);
         setTotal(r.data.meta?.total ?? r.data.total ?? 0);
       })
-      .catch(() => toast.error('Failed to load deeds'))
+      .catch(() => toast.error('Failed to load dolils'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -95,9 +95,9 @@ export default function DeedsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!await showConfirm('This deed will be permanently deleted.', { title: 'Delete deed?' })) return;
-    api.delete(`/deeds/${id}`)
-      .then(() => { toast.success('Deed deleted'); load(search, status, dateFrom, dateTo, sortBy, sortDir, page); })
+    if (!await showConfirm('This dolil will be permanently deleted.', { title: 'Delete dolil?' })) return;
+    api.delete(`/dolils/${id}`)
+      .then(() => { toast.success('Dolil deleted'); load(search, status, dateFrom, dateTo, sortBy, sortDir, page); })
       .catch(() => toast.error('Delete failed'));
   }
 
@@ -123,9 +123,9 @@ export default function DeedsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Deeds</h2>
-        <Link href="/dashboard/deeds/create" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
-          + New Deed
+        <h2 className="text-2xl font-bold text-gray-900">Dolils</h2>
+        <Link href="/dashboard/dolils/create" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+          + New Dolil
         </Link>
       </div>
 
@@ -133,7 +133,7 @@ export default function DeedsPage() {
       <div className="bg-white rounded-lg shadow p-4 flex flex-wrap gap-3 items-center">
         <input
           type="text"
-          placeholder="Search by deed #, title, name, email, phone…"
+          placeholder="Search by dolil #, title, name, email, phone…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); load(search, status, dateFrom, dateTo, sortBy, sortDir, 1); } }}
@@ -189,7 +189,7 @@ export default function DeedsPage() {
             <thead className="bg-gray-50 text-gray-600 text-left border-b border-gray-200">
               <tr>
                 <SortTh col="id" label="#" className="w-12" />
-                <SortTh col="deed_number" label="Deed No." className="w-32" />
+                <SortTh col="deed_number" label="Dolil No." className="w-32" />
                 <SortTh col="title" label="Title" />
                 <SortTh col="status" label="Status" />
                 <SortTh col="creator" label="Created By" />
@@ -202,14 +202,14 @@ export default function DeedsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {deeds.map((d) => (
+              {dolils.map((d) => (
                 <tr key={d.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-400 text-xs font-mono">{d.id}</td>
                   <td className="px-4 py-3 text-xs font-mono text-gray-700">
                     {d.deed_number ?? <span className="text-gray-300">—</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/dashboard/deeds/${d.id}`} className="font-medium text-gray-900 hover:text-blue-600">
+                    <Link href={`/dashboard/dolils/${d.id}`} className="font-medium text-gray-900 hover:text-blue-600">
                       {d.title}
                     </Link>
                     {d.description && (
@@ -239,14 +239,14 @@ export default function DeedsPage() {
                   <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{fmtDate(d.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2 text-xs">
-                      <Link href={`/dashboard/deeds/${d.id}`} className="text-blue-600 hover:underline">View</Link>
+                      <Link href={`/dashboard/dolils/${d.id}`} className="text-blue-600 hover:underline">View</Link>
                       <button onClick={() => handleDelete(d.id)} className="text-red-600 hover:underline">Delete</button>
                     </div>
                   </td>
                 </tr>
               ))}
-              {deeds.length === 0 && (
-                <tr><td colSpan={11} className="px-4 py-10 text-center text-gray-400">No deeds found</td></tr>
+              {dolils.length === 0 && (
+                <tr><td colSpan={11} className="px-4 py-10 text-center text-gray-400">No dolils found</td></tr>
               )}
             </tbody>
           </table>

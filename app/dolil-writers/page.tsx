@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default function DeedWritersPage() {
+export default function DolilWritersPage() {
   redirect('/');
 }

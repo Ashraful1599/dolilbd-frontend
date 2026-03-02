@@ -37,7 +37,7 @@ function RegisterForm() {
     email: '',
     phone: '+88',
     password: '',
-    role: 'user' as 'user' | 'deed_writer',
+    role: 'user' as 'user' | 'dolil_writer',
     registration_number: '',
     office_name: '',
     division_id: null as number | null,
@@ -59,9 +59,9 @@ function RegisterForm() {
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch divisions when deed_writer role selected
+  // Fetch divisions when dolil_writer role selected
   useEffect(() => {
-    if (form.role !== 'deed_writer' || divisions.length > 0) return;
+    if (form.role !== 'dolil_writer' || divisions.length > 0) return;
     fetch(`${API}/locations/divisions`)
       .then((r) => r.json())
       .then(setDivisions)
@@ -130,7 +130,7 @@ function RegisterForm() {
         avatarFile: avatarFile ?? undefined,
         ...(refCode ? { referral_code: refCode } : {}),
       };
-      if (form.role === 'deed_writer') {
+      if (form.role === 'dolil_writer') {
         payload.registration_number = form.registration_number;
         payload.office_name = form.office_name;
         payload.division_id = form.division_id;
@@ -451,18 +451,18 @@ function RegisterForm() {
               <label className={`border-2 rounded-lg p-3 cursor-pointer transition-colors ${form.role === 'user' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
                 <input type="radio" name="role" value="user" checked={form.role === 'user'} onChange={() => set('role', 'user')} className="sr-only" />
                 <div className="font-medium text-sm text-gray-900">Regular User</div>
-                <div className="text-xs text-gray-500 mt-1">Create and track deeds</div>
+                <div className="text-xs text-gray-500 mt-1">Create and track dolils</div>
               </label>
-              <label className={`border-2 rounded-lg p-3 cursor-pointer transition-colors ${form.role === 'deed_writer' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                <input type="radio" name="role" value="deed_writer" checked={form.role === 'deed_writer'} onChange={() => set('role', 'deed_writer')} className="sr-only" />
-                <div className="font-medium text-sm text-gray-900">Deed Writer</div>
+              <label className={`border-2 rounded-lg p-3 cursor-pointer transition-colors ${form.role === 'dolil_writer' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                <input type="radio" name="role" value="dolil_writer" checked={form.role === 'dolil_writer'} onChange={() => set('role', 'dolil_writer')} className="sr-only" />
+                <div className="font-medium text-sm text-gray-900">Dolil Writer</div>
                 <div className="text-xs text-gray-500 mt-1">Licensed professional</div>
               </label>
             </div>
           </div>
 
-          {/* Deed Writer extra fields */}
-          {form.role === 'deed_writer' && (
+          {/* Dolil Writer extra fields */}
+          {form.role === 'dolil_writer' && (
             <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 space-y-3">
               <p className="text-sm font-medium text-blue-800">Professional Details</p>
               <div>

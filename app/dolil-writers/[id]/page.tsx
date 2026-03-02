@@ -134,7 +134,7 @@ function tomorrowDate(): string {
   return d.toISOString().split('T')[0];
 }
 
-export default function DeedWriterDetailPage() {
+export default function DolilWriterDetailPage() {
   const params = useParams();
   const id = params?.id;
 
@@ -154,7 +154,7 @@ export default function DeedWriterDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetch(`${API}/deed-writers/${id}`)
+    fetch(`${API}/dolil-writers/${id}`)
       .then((r) => {
         if (!r.ok) { setNotFound(true); return null; }
         return r.json();
@@ -173,7 +173,7 @@ export default function DeedWriterDetailPage() {
     setBookingError(null);
     setBookingSubmitting(true);
     try {
-      const res = await fetch(`${API}/deed-writers/${id}/appointments`, {
+      const res = await fetch(`${API}/dolil-writers/${id}/appointments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(bookingForm),
@@ -209,7 +209,7 @@ export default function DeedWriterDetailPage() {
         {/* Not found */}
         {notFound && (
           <div className="py-24 text-center">
-            <p className="text-lg font-semibold text-gray-700">Deed writer not found</p>
+            <p className="text-lg font-semibold text-gray-700">Dolil writer not found</p>
             <Link href="/" className="text-sm text-blue-600 hover:underline mt-2 inline-block">Back to directory</Link>
           </div>
         )}

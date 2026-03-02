@@ -39,7 +39,7 @@ interface Payment {
   recorded_by: { id: number; name: string } | null;
   created_at: string;
 }
-interface Deed {
+interface Dolil {
   id: number;
   deed_number: string | null;
   title: string;
@@ -97,8 +97,8 @@ const TRANSITIONS: Record<string, string[]> = {
 
 // Activity dot color per action type
 const actionDotColor: Record<string, string> = {
-  deed_created:      'bg-emerald-500',
-  deed_assigned:     'bg-indigo-500',
+  dolil_created:      'bg-emerald-500',
+  dolil_assigned:     'bg-indigo-500',
   status_changed:    'bg-amber-500',
   comment_added:     'bg-blue-500',
   file_attached:     'bg-blue-400',
@@ -109,11 +109,11 @@ const actionDotColor: Record<string, string> = {
   payment_deleted:   'bg-red-400',
 };
 
-function getAllowedTransitions(status: string, user: { id: number; role: string } | null, deed: { created_by?: { id: number } | null; assigned_to?: { id: number } | null } | null): string[] {
-  if (!user || !deed) return [];
-  if (user.role === 'admin' || user.role === 'deed_writer') return ALL_STATUSES.filter(s => s !== status);
+function getAllowedTransitions(status: string, user: { id: number; role: string } | null, dolil: { created_by?: { id: number } | null; assigned_to?: { id: number } | null } | null): string[] {
+  if (!user || !dolil) return [];
+  if (user.role === 'admin' || user.role === 'dolil_writer') return ALL_STATUSES.filter(s => s !== status);
   const all = TRANSITIONS[status] ?? [];
-  if (deed.created_by?.id === user.id) return all.filter(s => s === 'under_review');
+  if (dolil.created_by?.id === user.id) return all.filter(s => s === 'under_review');
   return [];
 }
 
@@ -211,12 +211,12 @@ function LoadingSkeleton() {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
-export default function DeedDetailPage() {
+export default function DolilDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const currentUser = useAppSelector((s) => s.user.currentUser);
 
-  const [deed, setDeed] = useState<Deed | null>(null);
+  const [dolil, setDolil] = useState<Dolil | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [commentBody, setCommentBody] = useState('');
@@ -258,27 +258,27 @@ export default function DeedDetailPage() {
   const [editPaymentForm, setEditPaymentForm] = useState({ amount: '', paid_at: '', notes: '' });
   const [savingPayment, setSavingPayment] = useState(false);
 
-  const allowedTransitions = getAllowedTransitions(deed?.status ?? '', currentUser, deed);
+  const allowedTransitions = getAllowedTransitions(dolil?.status ?? "", currentUser, dolil);
 
-  const canEdit = currentUser && deed && (
+  const canEdit = currentUser && dolil && (
     currentUser.role === 'admin' ||
-    currentUser.role === 'deed_writer' ||
-    deed.created_by?.id === currentUser.id ||
-    deed.assigned_to?.id === currentUser.id
+    currentUser.role === 'dolil_writer' ||
+    dolil.created_by?.id === currentUser.id ||
+    dolil.assigned_to?.id === currentUser.id
   );
 
-  const canRecordPayment = currentUser && deed && (
+  const canRecordPayment = currentUser && dolil && (
     currentUser.role === 'admin' ||
-    deed.assigned_to?.id === currentUser.id ||
-    (deed.created_by?.id === currentUser.id && currentUser.role === 'deed_writer')
+    dolil.assigned_to?.id === currentUser.id ||
+    (dolil.created_by?.id === currentUser.id && currentUser.role === 'dolil_writer')
   );
 
-  const isCompletedOrRecorded = deed && ['completed', 'archived'].includes(deed.status);
+  const isCompletedOrRecorded = dolil && ['completed', 'archived'].includes(dolil.status);
   const canReview =
     isCompletedOrRecorded &&
     currentUser &&
     ['admin', 'user'].includes(currentUser.role) &&
-    currentUser.id !== deed?.assigned_to?.id;
+    currentUser.id !== dolil?.assigned_to?.id;
   const myReview = reviews.find((r) => r.reviewer.id === currentUser?.id);
 
   // User search for inline edit
@@ -294,33 +294,33 @@ export default function DeedDetailPage() {
     }, 300);
   }, [searchQuery]);
 
-  function loadDeed() {
-    api.get(`/deeds/${id}`)
-      .then((r) => { setDeed(r.data.data); setDocuments(r.data.data.documents || []); })
+  function loadDolil() {
+    api.get(`/dolils/${id}`)
+      .then((r) => { setDolil(r.data.data); setDocuments(r.data.data.documents || []); })
       .catch((err) => {
-        if (err?.response?.status === 403) { toast.info('You no longer have access to this deed.'); router.push('/dashboard/deeds'); }
-        else toast.error('Failed to load deed');
+        if (err?.response?.status === 403) { toast.info("You no longer have access to this dolil."); router.push('/dashboard/dolils'); }
+        else toast.error("Failed to load dolil");
       });
   }
 
-  function loadComments()    { api.get(`/deeds/${id}/comments`).then((r) => setComments(r.data.data || r.data)).catch(() => {}); }
-  function loadReviews()     { api.get(`/deeds/${id}/reviews`).then((r) => setReviews(r.data.data || [])).catch(() => {}); }
-  function loadActivities()  { api.get(`/deeds/${id}/activities`).then((r) => setActivities(r.data)).catch(() => {}); }
-  function loadPayments()    { api.get(`/deeds/${id}/payments`).then((r) => setPayments(r.data.data ?? r.data)).catch(() => {}); }
+  function loadComments()    { api.get(`/dolils/${id}/comments`).then((r) => setComments(r.data.data || r.data)).catch(() => {}); }
+  function loadReviews()     { api.get(`/dolils/${id}/reviews`).then((r) => setReviews(r.data.data || [])).catch(() => {}); }
+  function loadActivities()  { api.get(`/dolils/${id}/activities`).then((r) => setActivities(r.data)).catch(() => {}); }
+  function loadPayments()    { api.get(`/dolils/${id}/payments`).then((r) => setPayments(r.data.data ?? r.data)).catch(() => {}); }
 
-  useEffect(() => { loadDeed(); loadComments(); loadReviews(); loadActivities(); loadPayments(); }, [id]);
+  useEffect(() => { loadDolil(); loadComments(); loadReviews(); loadActivities(); loadPayments(); }, [id]);
 
-  // ── Inline deed edit ───────────────────────────────────────────────────────
+  // ── Inline dolil edit ───────────────────────────────────────────────────────
   function startEdit() {
-    if (!deed) return;
+    if (!dolil) return;
     setEditForm({
-      deed_number:      deed.deed_number ?? '',
-      title:            deed.title,
-      status:           deed.status,
-      agreement_amount: deed.agreement_amount != null ? String(deed.agreement_amount) : '',
-      payment_status:   deed.payment_status ?? 'pending',
+      deed_number:      dolil.deed_number ?? '',
+      title:            dolil.title,
+      status:           dolil.status,
+      agreement_amount: dolil.agreement_amount != null ? String(dolil.agreement_amount) : '',
+      payment_status:   dolil.payment_status ?? 'pending',
     });
-    setEditAssignedUser(deed.assigned_to ? { ...deed.assigned_to, phone: null } : null);
+    setEditAssignedUser(dolil.assigned_to ? { ...dolil.assigned_to, phone: null } : null);
     setSearchQuery('');
     setSearchResults([]);
     setEditMode(true);
@@ -329,19 +329,19 @@ export default function DeedDetailPage() {
   function cancelEdit() { setEditMode(false); setSearchQuery(''); setSearchResults([]); }
 
   function startEditNotes() {
-    if (!deed) return;
-    setEditNotesForm({ description: deed.description ?? '', notes: deed.notes ?? '' });
+    if (!dolil) return;
+    setEditNotesForm({ description: dolil.description ?? '', notes: dolil.notes ?? '' });
     setEditNotesMode(true);
   }
 
   async function handleSaveNotes() {
     setSavingNotes(true);
     try {
-      const res = await api.put(`/deeds/${id}`, {
+      const res = await api.put(`/dolils/${id}`, {
         description: editNotesForm.description || null,
         notes:       editNotesForm.notes || null,
       });
-      setDeed(res.data.data);
+      setDolil(res.data.data);
       setEditNotesMode(false);
       toast.success('Saved');
       loadActivities();
@@ -355,7 +355,7 @@ export default function DeedDetailPage() {
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await api.put(`/deeds/${id}`, {
+      const res = await api.put(`/dolils/${id}`, {
         deed_number:      editForm.deed_number || null,
         title:            editForm.title,
         status:           editForm.status,
@@ -368,15 +368,15 @@ export default function DeedDetailPage() {
         currentUser?.role === 'admin' ||
         updated?.created_by?.id === currentUser?.id ||
         updated?.assigned_to?.id === currentUser?.id;
-      if (!stillHasAccess) { router.push('/dashboard/deeds'); return; }
-      setDeed(updated);
+      if (!stillHasAccess) { router.push('/dashboard/dolils'); return; }
+      setDolil(updated);
       setEditMode(false);
       setSearchQuery('');
-      toast.success('Deed updated');
+      toast.success('Dolil updated');
       loadActivities();
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.error(msg || 'Failed to update deed');
+      toast.error(msg || "Failed to update dolil");
     } finally {
       setSaving(false);
     }
@@ -384,11 +384,11 @@ export default function DeedDetailPage() {
 
   // ── Status quick-change ────────────────────────────────────────────────────
   async function handleStatusChange(newStatus: string) {
-    if (!deed || newStatus === deed.status) return;
+    if (!dolil || newStatus === dolil.status) return;
     setChangingStatus(true);
     try {
-      const res = await api.put(`/deeds/${id}`, { status: newStatus });
-      setDeed(res.data.data);
+      const res = await api.put(`/dolils/${id}`, { status: newStatus });
+      setDolil(res.data.data);
       toast.success(`Status changed to ${statusLabels[newStatus] ?? newStatus}`);
       loadActivities();
     } catch { toast.error('Failed to change status'); }
@@ -404,7 +404,7 @@ export default function DeedDetailPage() {
     if (!reviewRating) return;
     const req = editingReview
       ? api.put(`/reviews/${editingReview.id}`, { rating: reviewRating, body: reviewBody })
-      : api.post(`/deeds/${id}/reviews`, { rating: reviewRating, body: reviewBody });
+      : api.post(`/dolils/${id}/reviews`, { rating: reviewRating, body: reviewBody });
     await toast.promise(
       req.then((res) => {
         const updated: Review = res.data.data ?? res.data;
@@ -425,7 +425,7 @@ export default function DeedDetailPage() {
       const formData = new FormData();
       if (commentBody) formData.append('body', commentBody);
       if (commentFile) formData.append('attachment', commentFile);
-      const res = await api.post(`/deeds/${id}/comments`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await api.post(`/dolils/${id}/comments`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setComments((prev) => [...prev, res.data.data]);
       setCommentBody(''); setCommentFile(null);
       loadActivities();
@@ -449,7 +449,7 @@ export default function DeedDetailPage() {
     try {
       await api.put(`/payments/${editingPayment.id}`, { amount: Number(editPaymentForm.amount), paid_at: editPaymentForm.paid_at, notes: editPaymentForm.notes || null });
       toast.success('Payment updated'); setEditingPayment(null);
-      loadPayments(); loadDeed(); loadActivities();
+      loadPayments(); loadDolil(); loadActivities();
     } catch (err: unknown) {
       toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update payment');
     } finally { setSavingPayment(false); }
@@ -459,10 +459,10 @@ export default function DeedDetailPage() {
     e.preventDefault();
     setSubmittingPayment(true);
     try {
-      await api.post(`/deeds/${id}/payments`, { amount: Number(paymentForm.amount), paid_at: paymentForm.paid_at, notes: paymentForm.notes || null });
+      await api.post(`/dolils/${id}/payments`, { amount: Number(paymentForm.amount), paid_at: paymentForm.paid_at, notes: paymentForm.notes || null });
       toast.success('Payment recorded');
       setPaymentForm({ amount: '', paid_at: new Date().toISOString().split('T')[0], notes: '' }); setAddingPayment(false);
-      loadPayments(); loadDeed(); loadActivities();
+      loadPayments(); loadDolil(); loadActivities();
     } catch (err: unknown) {
       toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to record payment');
     } finally { setSubmittingPayment(false); }
@@ -470,18 +470,18 @@ export default function DeedDetailPage() {
 
   async function handleDeletePayment(paymentId: number) {
     if (!await showConfirm('This payment record will be permanently removed.', { title: 'Delete payment?' })) return;
-    try { await api.delete(`/payments/${paymentId}`); toast.success('Payment deleted'); loadPayments(); loadDeed(); loadActivities(); }
+    try { await api.delete(`/payments/${paymentId}`); toast.success('Payment deleted'); loadPayments(); loadDolil(); loadActivities(); }
     catch { toast.error('Failed to delete payment'); }
   }
 
-  if (!deed) return <LoadingSkeleton />;
+  if (!dolil) return <LoadingSkeleton />;
 
-  const editableStatuses = (currentUser?.role === 'admin' || currentUser?.role === 'deed_writer')
+  const editableStatuses = (currentUser?.role === 'admin' || currentUser?.role === 'dolil_writer')
     ? ALL_STATUSES
-    : [deed.status, ...(TRANSITIONS[deed.status] ?? []).filter(s => deed.created_by?.id === currentUser?.id ? s === 'under_review' : false)];
+    : [dolil.status, ...(TRANSITIONS[dolil.status] ?? []).filter(s => dolil.created_by?.id === currentUser?.id ? s === 'under_review' : false)];
 
-  const agreementAmt = deed.agreement_amount != null ? Number(deed.agreement_amount) : null;
-  const paidAmt      = deed.amount_paid ?? 0;
+  const agreementAmt = dolil.agreement_amount != null ? Number(dolil.agreement_amount) : null;
+  const paidAmt      = dolil.amount_paid ?? 0;
   const dueAmt       = agreementAmt != null ? agreementAmt - paidAmt : null;
   const paidPct      = agreementAmt ? Math.min(100, Math.round((paidAmt / agreementAmt) * 100)) : 0;
 
@@ -491,16 +491,16 @@ export default function DeedDetailPage() {
       {/* ── Header ── */}
       <div>
         <div className="mb-2">
-          <Link href="/dashboard/deeds" className="text-gray-500 hover:text-gray-700 text-sm">← Deeds</Link>
+          <Link href="/dashboard/dolils" className="text-gray-500 hover:text-gray-700 text-sm">← Dolils</Link>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-2xl font-bold text-gray-900">{deed.title}</h2>
-          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[deed.status] ?? 'bg-gray-100 text-gray-700'}`}>
-            {statusLabels[deed.status] ?? deed.status}
+          <h2 className="text-2xl font-bold text-gray-900">{dolil.title}</h2>
+          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[dolil.status] ?? 'bg-gray-100 text-gray-700'}`}>
+            {statusLabels[dolil.status] ?? dolil.status}
           </span>
         </div>
-        {deed.deed_number && (
-          <p className="text-sm text-gray-400 font-mono mt-0.5">{deed.deed_number}</p>
+        {dolil.deed_number && (
+          <p className="text-sm text-gray-400 font-mono mt-0.5">{dolil.deed_number}</p>
         )}
       </div>
 
@@ -536,7 +536,7 @@ export default function DeedDetailPage() {
                     className={inCls} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Deed Number</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Dolil Number</label>
                   <input type="text" value={editForm.deed_number}
                     onChange={(e) => setEditForm((p) => ({ ...p, deed_number: e.target.value }))}
                     className={inCls} placeholder="e.g. DN-2024-00123" />
@@ -617,43 +617,43 @@ export default function DeedDetailPage() {
                 <div className="space-y-2.5 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Id</span>
-                    <span className="font-medium text-gray-900 font-mono">#{deed.id}</span>
+                    <span className="font-medium text-gray-900 font-mono">#{dolil.id}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">Status</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[deed.status] ?? 'bg-gray-100 text-gray-700'}`}>
-                      {statusLabels[deed.status] ?? deed.status}
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[dolil.status] ?? 'bg-gray-100 text-gray-700'}`}>
+                      {statusLabels[dolil.status] ?? dolil.status}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Deed No.</span>
-                    <span className="font-medium text-gray-900 font-mono">{deed.deed_number ?? <span className="text-gray-400 italic text-xs not-italic font-sans">—</span>}</span>
+                    <span className="text-gray-500">Dolil No.</span>
+                    <span className="font-medium text-gray-900 font-mono">{dolil.deed_number ?? <span className="text-gray-400 italic text-xs not-italic font-sans">—</span>}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">Created by</span>
-                    {deed.created_by ? (
+                    {dolil.created_by ? (
                       <div className="flex items-center gap-1.5">
-                        <Avatar name={deed.created_by.name} />
-                        <span className="font-medium text-gray-900">{deed.created_by.name}</span>
+                        <Avatar name={dolil.created_by.name} />
+                        <span className="font-medium text-gray-900">{dolil.created_by.name}</span>
                       </div>
                     ) : <span className="text-gray-400">—</span>}
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">Assigned to</span>
-                    {deed.assigned_to ? (
+                    {dolil.assigned_to ? (
                       <div className="flex items-center gap-1.5">
-                        <Avatar name={deed.assigned_to.name} />
-                        <span className="font-medium text-gray-900">{deed.assigned_to.name}</span>
+                        <Avatar name={dolil.assigned_to.name} />
+                        <span className="font-medium text-gray-900">{dolil.assigned_to.name}</span>
                       </div>
                     ) : <span className="text-gray-400 italic text-xs">Unassigned</span>}
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Created</span>
-                    <span className="text-gray-700">{fmtDate(deed.created_at)}</span>
+                    <span className="text-gray-700">{fmtDate(dolil.created_at)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Updated</span>
-                    <span className="text-gray-700">{fmtDate(deed.updated_at)}</span>
+                    <span className="text-gray-700">{fmtDate(dolil.updated_at)}</span>
                   </div>
                 </div>
               </div>
@@ -686,7 +686,7 @@ export default function DeedDetailPage() {
                   <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
                   <textarea rows={4} value={editNotesForm.description}
                     onChange={(e) => setEditNotesForm((p) => ({ ...p, description: e.target.value }))}
-                    className={inCls} placeholder="Brief description of this deed..." />
+                    className={inCls} placeholder="Brief description of this dolil..." />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
@@ -699,11 +699,11 @@ export default function DeedDetailPage() {
               <div className="p-5 space-y-4 max-h-64 overflow-y-auto">
                 <div>
                   <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Description</p>
-                  <p className="text-sm text-gray-700">{deed.description ?? <span className="text-gray-400 italic">—</span>}</p>
+                  <p className="text-sm text-gray-700">{dolil.description ?? <span className="text-gray-400 italic">—</span>}</p>
                 </div>
                 <div className="border-t pt-4">
                   <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Notes</p>
-                  <p className="text-sm text-gray-700">{deed.notes ?? <span className="text-gray-400 italic">—</span>}</p>
+                  <p className="text-sm text-gray-700">{dolil.notes ?? <span className="text-gray-400 italic">—</span>}</p>
                 </div>
               </div>
             )}
@@ -713,9 +713,9 @@ export default function DeedDetailPage() {
           <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-800">Payment</h3>
-              {deed.payment_status && (
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${paymentStatusColors[deed.payment_status] ?? 'bg-gray-100 text-gray-600'}`}>
-                  {paymentStatusLabels[deed.payment_status] ?? deed.payment_status}
+              {dolil.payment_status && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${paymentStatusColors[dolil.payment_status] ?? 'bg-gray-100 text-gray-600'}`}>
+                  {paymentStatusLabels[dolil.payment_status] ?? dolil.payment_status}
                 </span>
               )}
             </div>
@@ -874,7 +874,7 @@ export default function DeedDetailPage() {
               <p className="text-xs text-gray-500 mt-0.5">{documents.length} file{documents.length !== 1 ? 's' : ''}</p>
             </div>
             <div className="p-5 max-h-64 overflow-y-auto">
-              <DocumentPanel deedId={deed.id} documents={documents} onChange={setDocuments} />
+              <DocumentPanel dolilId={dolil.id} documents={documents} onChange={setDocuments} />
             </div>
           </div>
 
@@ -934,8 +934,8 @@ export default function DeedDetailPage() {
                     </div>
                   </>
                 )}
-                {canReview && !deed.assigned_to && (
-                  <p className="text-sm text-gray-400 italic">No deed writer assigned — cannot leave a review.</p>
+                {canReview && !dolil.assigned_to && (
+                  <p className="text-sm text-gray-400 italic">No dolil writer assigned — cannot leave a review.</p>
                 )}
               </div>
             </div>

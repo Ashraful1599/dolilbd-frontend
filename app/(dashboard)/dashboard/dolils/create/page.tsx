@@ -11,10 +11,10 @@ interface Document { id: number; original_filename: string; file_size: number | 
 
 const inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition';
 
-export default function CreateDeedPage() {
+export default function CreateDolilPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [createdDeed, setCreatedDeed] = useState<{ id: number; title: string } | null>(null);
+  const [createdDolil, setCreatedDolil] = useState<{ id: number; title: string } | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [form, setForm] = useState({ deed_number: '', title: '', description: '', notes: '', status: 'draft', agreement_amount: '', payment_status: 'pending' });
 
@@ -55,27 +55,27 @@ export default function CreateDeedPage() {
         payment_status: form.payment_status,
       };
       if (selectedUser) payload.assigned_to = selectedUser.id;
-      const res = await api.post('/deeds', payload);
-      const deed = res.data.data;
-      toast.success('Deed created — you can now upload documents');
-      setCreatedDeed({ id: deed.id, title: deed.title });
+      const res = await api.post('/dolils', payload);
+      const dolil = res.data.data;
+      toast.success('Dolil created — you can now upload documents');
+      setCreatedDolil({ id: dolil.id, title: dolil.title });
     } catch (err: unknown) {
       const errData = (err as { response?: { data?: { message?: string } } })?.response?.data;
-      toast.error(errData?.message || 'Failed to create deed');
+      toast.error(errData?.message || 'Failed to create dolil');
     } finally {
       setLoading(false);
     }
   }
 
   // ── Step 2: document upload ────────────────────────────────────────────────
-  if (createdDeed) {
+  if (createdDolil) {
     return (
       <div className="max-w-2xl space-y-6">
         {/* Progress indicator */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm">
             <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">✓</div>
-            <span className="text-gray-500">Deed details</span>
+            <span className="text-gray-500">Dolil details</span>
           </div>
           <div className="flex-1 h-px bg-blue-200" />
           <div className="flex items-center gap-2 text-sm">
@@ -86,12 +86,12 @@ export default function CreateDeedPage() {
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h3 className="font-semibold text-gray-800">Documents for "{createdDeed.title}"</h3>
+            <h3 className="font-semibold text-gray-800">Documents for "{createdDolil.title}"</h3>
             <p className="text-xs text-gray-500 mt-0.5">Upload any supporting files. You can also do this later.</p>
           </div>
           <div className="p-6">
             <DocumentPanel
-              deedId={createdDeed.id}
+              dolilId={createdDolil.id}
               documents={documents}
               onChange={setDocuments}
             />
@@ -100,24 +100,24 @@ export default function CreateDeedPage() {
 
         <div className="flex gap-3">
           <button
-            onClick={() => router.push(`/dashboard/deeds/${createdDeed.id}`)}
+            onClick={() => router.push(`/dashboard/dolils/${createdDolil.id}`)}
             className="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 cursor-pointer transition-colors"
           >
-            {documents.length > 0 ? 'Done — View Deed' : 'Skip & View Deed'}
+            {documents.length > 0 ? 'Done — View Dolil' : 'Skip & View Dolil'}
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Step 1: deed details form ──────────────────────────────────────────────
+  // ── Step 1: dolil details form ─────────────────────────────────────────────
   return (
     <div className="max-w-2xl space-y-6">
       {/* Progress indicator */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 text-sm">
           <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</div>
-          <span className="font-medium text-gray-900">Deed details</span>
+          <span className="font-medium text-gray-900">Dolil details</span>
         </div>
         <div className="flex-1 h-px bg-gray-200" />
         <div className="flex items-center gap-2 text-sm">
@@ -127,13 +127,13 @@ export default function CreateDeedPage() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/deeds" className="text-gray-500 hover:text-gray-700 text-sm cursor-pointer">← Deeds</Link>
-        <h2 className="text-2xl font-bold text-gray-900">New Deed</h2>
+        <Link href="/dashboard/dolils" className="text-gray-500 hover:text-gray-700 text-sm cursor-pointer">← Dolils</Link>
+        <h2 className="text-2xl font-bold text-gray-900">New Dolil</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Deed Number</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Dolil Number</label>
           <input type="text" value={form.deed_number} onChange={(e) => set('deed_number', e.target.value)} className={inputCls} placeholder="e.g. DN-2024-00123 (from registered office)" />
           <p className="text-xs text-gray-400 mt-1">Assigned by the registered office. Leave blank if not yet available.</p>
         </div>
@@ -145,7 +145,7 @@ export default function CreateDeedPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={3} className={inputCls} placeholder="Brief description of this deed..." />
+          <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={3} className={inputCls} placeholder="Brief description of this dolil..." />
         </div>
 
         <div>
@@ -220,7 +220,7 @@ export default function CreateDeedPage() {
             className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 cursor-pointer transition-colors text-sm">
             {loading ? 'Creating...' : 'Continue →'}
           </button>
-          <Link href="/dashboard/deeds" className="border border-gray-300 px-6 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors">
+          <Link href="/dashboard/dolils" className="border border-gray-300 px-6 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors">
             Cancel
           </Link>
         </div>
