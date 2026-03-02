@@ -23,8 +23,12 @@ function LoginInner() {
   const [loginField, setLoginField] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [unverifiedData, setUnverifiedData] = useState<{ email: string; phone: string; verify_token: string } | null>(null);
   const [resending, setResending] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpVerifying, setOtpVerifying] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('verified') === '1') {
@@ -45,9 +49,9 @@ function LoginInner() {
       dispatch(setUser(user));
       router.push(user.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err: unknown) {
-      const res = (err as { response?: { data?: { message?: string; email_verified?: boolean; email?: string }; status?: number } })?.response;
+      const res = (err as { response?: { data?: { message?: string; email_verified?: boolean; email?: string; phone?: string; verify_token?: string }; status?: number } })?.response;
       if (res?.status === 403 && res?.data?.email_verified === false) {
-        setUnverifiedEmail(res.data?.email || loginField);
+        setUnverifiedData({ email: res.data?.email ?? '', phone: res.data?.phone ?? '', verify_token: res.data?.verify_token ?? '' });
       } else {
         const message = res?.data?.message || 'Login failed. Check your credentials.';
         toast.error(message);
@@ -112,28 +116,91 @@ function LoginInner() {
         </p>
 
         {/* Unverified account notice */}
-        {unverifiedEmail && (
-          <div className="mt-4 border border-yellow-300 bg-yellow-50 rounded-lg p-4">
-            <p className="text-sm font-medium text-yellow-800 mb-1">Account not verified</p>
-            <p className="text-xs text-yellow-700 mb-3">
-              Please verify your <span className="font-semibold">email</span> or <span className="font-semibold">phone number</span> to sign in.
-              You can resend the email verification link below.
-            </p>
+        {unverifiedData && (
+          <div className="mt-4 border border-yellow-300 bg-yellow-50 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-medium text-yellow-800">Account not verified</p>
+            <p className="text-xs text-yellow-700">Verify your email or phone number to sign in.</p>
+
+            {/* Email option */}
             <button
               onClick={async () => {
                 setResending(true);
                 try {
-                  await api.post('/email/verify/resend-by-email', { email: unverifiedEmail });
+                  await api.post('/email/verify/resend-by-email', { email: unverifiedData.email });
                   toast.success('Verification email resent!');
                 } catch {
-                  toast.error('Could not resend — please try registering again.');
+                  toast.error('Could not resend. Please try again.');
                 } finally { setResending(false); }
               }}
               disabled={resending}
-              className="text-xs text-yellow-800 font-medium underline disabled:opacity-50 cursor-pointer"
+              className="w-full flex items-center gap-2 text-xs bg-white border border-yellow-300 text-yellow-800 rounded-md px-3 py-2 hover:bg-yellow-100 disabled:opacity-50 cursor-pointer"
             >
-              {resending ? 'Sending...' : 'Resend verification email'}
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+              {resending ? 'Sending...' : `Resend email to ${unverifiedData.email}`}
             </button>
+
+            {/* Phone option */}
+            {unverifiedData.phone && !otpSent && (
+              <button
+                onClick={async () => {
+                  setOtpSending(true);
+                  try {
+                    await api.post('/phone/send-otp', {}, { headers: { Authorization: `Bearer ${unverifiedData.verify_token}` } });
+                    setOtpSent(true);
+                    toast.success('OTP sent to your phone!');
+                  } catch {
+                    toast.error('Could not send OTP. Please try again.');
+                  } finally { setOtpSending(false); }
+                }}
+                disabled={otpSending}
+                className="w-full flex items-center gap-2 text-xs bg-white border border-yellow-300 text-yellow-800 rounded-md px-3 py-2 hover:bg-yellow-100 disabled:opacity-50 cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3" />
+                </svg>
+                {otpSending ? 'Sending OTP...' : `Verify phone ${unverifiedData.phone}`}
+              </button>
+            )}
+
+            {/* OTP input after phone OTP sent */}
+            {otpSent && (
+              <div className="space-y-2">
+                <p className="text-xs text-yellow-700">Enter the 4-digit OTP sent to {unverifiedData.phone}</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="0000"
+                    className="w-24 border border-yellow-300 rounded-md px-3 py-1.5 text-center text-lg tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
+                    autoFocus
+                  />
+                  <button
+                    onClick={async () => {
+                      setOtpVerifying(true);
+                      try {
+                        await api.post('/phone/verify', { code: otp }, { headers: { Authorization: `Bearer ${unverifiedData.verify_token}` } });
+                        toast.success('Phone verified! Signing you in...');
+                        // Re-attempt login
+                        const { user } = await login(loginField, password);
+                        dispatch(setUser(user));
+                        router.push(user.role === 'admin' ? '/admin' : '/dashboard');
+                      } catch {
+                        toast.error('Invalid OTP. Please try again.');
+                      } finally { setOtpVerifying(false); }
+                    }}
+                    disabled={otp.length !== 4 || otpVerifying}
+                    className="flex-1 bg-yellow-700 text-white text-xs rounded-md px-3 py-1.5 font-medium hover:bg-yellow-800 disabled:opacity-50 cursor-pointer"
+                  >
+                    {otpVerifying ? 'Verifying...' : 'Verify'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
