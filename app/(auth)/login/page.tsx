@@ -111,11 +111,14 @@ function LoginInner() {
           </Link>
         </p>
 
-        {/* Unverified email notice */}
+        {/* Unverified account notice */}
         {unverifiedEmail && (
           <div className="mt-4 border border-yellow-300 bg-yellow-50 rounded-lg p-4">
-            <p className="text-sm font-medium text-yellow-800 mb-1">Email not verified</p>
-            <p className="text-xs text-yellow-700 mb-3">Please check your inbox for <span className="font-semibold">{unverifiedEmail}</span> and click the verification link.</p>
+            <p className="text-sm font-medium text-yellow-800 mb-1">Account not verified</p>
+            <p className="text-xs text-yellow-700 mb-3">
+              Please verify your <span className="font-semibold">email</span> or <span className="font-semibold">phone number</span> to sign in.
+              You can resend the email verification link below.
+            </p>
             <button
               onClick={async () => {
                 setResending(true);
