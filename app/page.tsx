@@ -423,30 +423,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section id="how-it-works" className="py-14 sm:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">How It Works</h2>
-            <p className="text-gray-500 mt-2 max-w-xl mx-auto">
-              Getting help from a licensed deed writer has never been easier. Three simple steps.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-            {steps.map((s) => (
-              <div key={s.step} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-4">
-                  {s.icon}
-                </div>
-                <p className="text-xs font-bold text-blue-400 tracking-widest mb-2">STEP {s.step}</p>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── Directory ── */}
       <section id="directory" className="py-12 sm:py-16 bg-white flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -633,6 +609,30 @@ export default function HomePage() {
               </button>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ── How It Works ── */}
+      <section id="how-it-works" className="py-14 sm:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">How It Works</h2>
+            <p className="text-gray-500 mt-2 max-w-xl mx-auto">
+              Getting help from a licensed deed writer has never been easier. Three simple steps.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+            {steps.map((s) => (
+              <div key={s.step} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-4">
+                  {s.icon}
+                </div>
+                <p className="text-xs font-bold text-blue-400 tracking-widest mb-2">STEP {s.step}</p>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">{s.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
